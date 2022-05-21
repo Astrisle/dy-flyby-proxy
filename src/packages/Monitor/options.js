@@ -10,6 +10,11 @@ export const defaultOptions = {
   threshold: 1000,
   // 字号
   fontSize: 14,
+  //超粉团任务监控
+  taskTracking: {
+    enabled: false,
+    interval: 5,
+  },
   // 弹幕设置
   danmaku: {
     // 设置弹幕显示内容，如果在数组里就显示

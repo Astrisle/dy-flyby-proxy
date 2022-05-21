@@ -139,6 +139,10 @@ ipcMain.handle('get-doc-path', () => {
   return app.getPath('documents');
 });
 
+ipcMain.handle('get-desktop-path', () => {
+  return app.getPath('desktop');
+});
+
 ipcMain.handle('get-settings-save-path', async () => {
   const filePath = await dialog.showSaveDialog(win, {
     title: '选择设置文件保存路径',

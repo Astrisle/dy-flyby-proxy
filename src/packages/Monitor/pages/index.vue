@@ -241,9 +241,30 @@
           </el-form-item>
         </el-form>
       </el-tab-pane>
+      <el-tab-pane>
+        <template #label>
+          <el-icon><MagicStick /></el-icon>
+          <span>实验性功能</span>
+        </template>
+        <el-form>
+          <el-form-item label="超粉团任务追踪">
+            <el-switch v-model="options.taskTracking.enabled" />
+          </el-form-item>
+          <el-form-item label="更新间隔(秒)">
+            <el-input-number
+              v-model="options.taskTracking.interval"
+              :min="1"
+              :max="60"
+              :step="1"
+              controls-position="right"
+            >
+            </el-input-number>
+          </el-form-item>
+        </el-form>
+      </el-tab-pane>
     </el-tabs>
     <template #footer>
-      <div class="text-xs flex-auto">Recomposed by: 星落 | V2.3.3</div>
+      <div class="text-xs flex-auto">Recomposed by: 星落 | V2.3.5</div>
       <div class="text-xs flex-auto">
         Based on github: qianjiachun/douyu-monitor
       </div>
@@ -300,7 +321,12 @@ import Danmakuvip from '../components/DanmakuVIP/Danmaku.vue';
 import Gift from '../components/Gift/Gift.vue';
 import GiftUnfiltered from '../components/GiftUnfiltered/Gift.vue';
 
-import { Operation, Present, ChatDotRound } from '@element-plus/icons-vue';
+import {
+  Operation,
+  Present,
+  ChatDotRound,
+  MagicStick,
+} from '@element-plus/icons-vue';
 
 import { useNormalStyle } from '../hooks/useNormalStyle.js';
 import { useWebsocket } from '../hooks/useWebsocket.js';
@@ -316,11 +342,14 @@ import { defaultOptions } from '../options';
 const LOCAL_NAME = 'monitor_options';
 const ipc = window.ipcRenderer;
 const fs = window.fs;
+const rid = 520;
 
 let options = ref(deepCopy(defaultOptions));
 let allGiftData = ref({});
 let isShowOption = ref(false);
 let isShowDialog = ref(false);
+let superFansIntervalId = ref(0);
+let desktopDir = ref('');
 let dialogArrTmp = ref([]);
 let dialogIndex = ref(0);
 let strToAdd = ref('');
@@ -335,7 +364,6 @@ let heightUpper = ref(0);
 let heightLower = ref(0);
 
 onMounted(async () => {
-  let rid = 520;
   let localData = JSON.parse(getLocalData(LOCAL_NAME));
   if (Object.prototype.toString.call(localData) !== '[object Object]') {
     localData = deepCopy(defaultOptions);
@@ -408,6 +436,9 @@ onMounted(async () => {
     );
   }
 
+  //存储桌面路径
+  desktopDir.value = await ipc.invoke('get-desktop-path');
+
   await logInit(dirLog, dateStr, '弹幕');
   await logInit(dirLog, dateStr, '礼物');
   await logInit(dirLog, dateStr, '特殊事件');
@@ -435,6 +466,52 @@ async function resetLogPath() {
   let dirLog = parentDir + '\\520-Logs';
   //存储路径
   options.value.log.dir = dirLog;
+}
+
+async function checkAndWriteSuperFanStatus() {
+  const data = await getSuperFansData();
+  const path = desktopDir.value + '\\超粉任务数据.txt';
+  let taskList = data.data.superfans.tasklist;
+  let filtered = taskList.filter((task) => task.taskstatus.status === 0);
+  let enrtires = '';
+  filtered.forEach((task) => {
+    enrtires += superFansEntry(task) + '\n';
+  });
+  try {
+    await fs.promises.truncate(path).catch((err) => {
+      if (err.message.includes('ENOENT')) return;
+      else throw err;
+    });
+    await fs.promises.appendFile(path, enrtires);
+  } catch (error) {
+    console.log(err.message);
+    displayNotifyMessage('文件系统', '临时文件写入失败');
+  }
+}
+
+function superFansEntry(task) {
+  switch (task.taskdesc.id) {
+    case 111369:
+      return '办卡 - ' + task.taskstatus.cur + ' / ' + task.taskstatus.max;
+    case 111372:
+      return '贡献值 - ' + task.taskstatus.cur + ' / ' + task.taskstatus.max;
+    case 111367:
+      return '1鱼翅 - ' + task.taskstatus.cur + ' / ' + task.taskstatus.max;
+    case 111371:
+      return '0.1鱼翅 - ' + task.taskstatus.cur + ' / ' + task.taskstatus.max;
+    case 111368:
+      return '飞机 - ' + task.taskstatus.cur + ' / ' + task.taskstatus.max;
+    case 111370:
+      return '火箭 - ' + task.taskstatus.cur + ' / ' + task.taskstatus.max;
+    case 111373:
+      return (
+        '贡献值(循环) - ' + task.taskstatus.cur + ' / ' + task.taskstatus.max
+      );
+    case 111374:
+      return (
+        '办卡(循环) - ' + task.taskstatus.cur + ' / ' + task.taskstatus.max
+      );
+  }
 }
 
 function showDialog(index) {
@@ -756,7 +833,7 @@ function addToBan(nn) {
   }
 }
 
-function getRoomGiftData(rid) {
+function getRoomGiftData() {
   return new Promise((resolve) => {
     fetch('https://gift.douyucdn.cn/api/gift/v3/web/list?rid=' + rid, {
       method: 'GET',
@@ -812,6 +889,27 @@ function getGiftData() {
   });
 }
 
+function getSuperFansData() {
+  return new Promise((resolve) => {
+    fetch(
+      'https://www.douyu.com/japi/roomtask/superfans/getTaskStatus?rid=' + rid,
+      {
+        method: 'GET',
+      },
+    )
+      .then((res) => {
+        return res.json();
+      })
+      .then((ret) => {
+        resolve(ret);
+      })
+      .catch((err) => {
+        console.log(err);
+        resolve('500');
+      });
+  });
+}
+
 function onClickMonitor() {
   isShowOption.value = true;
 }
@@ -822,6 +920,35 @@ watch(
     saveLocalData(LOCAL_NAME, JSON.stringify(n));
   },
   { deep: true },
+);
+
+watch(
+  () => options.value.taskTracking.enabled,
+  (n, o) => {
+    if (n !== o && n === false) clearInterval(superFansIntervalId.value);
+    else if (n !== o && n === true)
+      superFansIntervalId.value = setInterval(
+        () => checkAndWriteSuperFanStatus(),
+        options.value.taskTracking.interval * 1000,
+      );
+  },
+);
+
+watch(
+  () => options.value.taskTracking.interval,
+  (n, o) => {
+    if (
+      n !== o &&
+      superFansIntervalId.value !== 0 &&
+      options.value.taskTracking.enabled === true
+    ) {
+      clearInterval(superFansIntervalId.value);
+      superFansIntervalId.value = setInterval(
+        () => checkAndWriteSuperFanStatus(),
+        options.value.taskTracking.interval * 1000,
+      );
+    }
+  },
 );
 </script>
 
