@@ -366,21 +366,23 @@ import {
 
 import { useNormalStyle } from '../hooks/useNormalStyle.js';
 import { useWebsocket } from '../hooks/useWebsocket.js';
+import { useOptions } from '../hooks/useOptions';
 
-import {
-  saveLocalData,
-  getLocalData,
-  deepCopy,
-  formatObj,
-} from '@/global/utils';
-import { defaultOptions } from '../options';
+// import {
+//   saveLocalData,
+//   getLocalData,
+//   deepCopy,
+//   formatObj,
+// } from '@/global/utils';
+// import { defaultOptions } from '../options';
 
-const LOCAL_NAME = 'monitor_options';
+// const LOCAL_NAME = 'monitor_options';
 const ipc = window.ipcRenderer;
 const fs = window.fs;
 const rid = 520;
 
-let options = ref(deepCopy(defaultOptions));
+//let options = ref(deepCopy(defaultOptions));
+let options = useOptions();
 let allGiftData = ref({});
 let isShowOption = ref(false);
 let isShowDialog = ref(false);
@@ -400,13 +402,13 @@ let heightUpper = ref(0);
 let heightLower = ref(0);
 
 onMounted(async () => {
-  let localData = JSON.parse(getLocalData(LOCAL_NAME));
-  if (Object.prototype.toString.call(localData) !== '[object Object]') {
-    localData = deepCopy(defaultOptions);
-  }
-  options.value = localData;
+  // let localData = JSON.parse(getLocalData(LOCAL_NAME));
+  // if (Object.prototype.toString.call(localData) !== '[object Object]') {
+  //   localData = deepCopy(defaultOptions);
+  // }
+  // options.value = localData;
 
-  options.value = formatObj(options.value, defaultOptions);
+  // options.value = formatObj(options.value, defaultOptions);
 
   //窗口大小重新定位
   heightUpper.value = options.value.moduleSize.upper;
@@ -964,13 +966,13 @@ function onClickMonitor() {
   isShowOption.value = true;
 }
 
-watch(
-  options,
-  (n) => {
-    saveLocalData(LOCAL_NAME, JSON.stringify(n));
-  },
-  { deep: true },
-);
+// watch(
+//   options,
+//   (n) => {
+//     saveLocalData(LOCAL_NAME, JSON.stringify(n));
+//   },
+//   { deep: true },
+// );
 
 watch(
   () => options.value.taskTracking.enabled,
