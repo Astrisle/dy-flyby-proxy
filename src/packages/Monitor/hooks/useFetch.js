@@ -1,4 +1,4 @@
-export function useFetch() {
+export function useFetch(ipc, rid) {
   const getRoomGiftData = () => {
     return new Promise((resolve) => {
       fetch('https://gift.douyucdn.cn/api/gift/v3/web/list?rid=' + rid, {
@@ -55,6 +55,35 @@ export function useFetch() {
     });
   };
 
+  const getSingleSupplementGiftData = (gfid) => {
+    return new Promise((resolve) => {
+      fetch('https://gift.douyucdn.cn/api/gift/v2/web/single?gid=' + gfid, {
+        method: 'GET',
+      })
+        .then((res) => {
+          return res.json();
+        })
+        .then((ret) => {
+          let supGiftData = {};
+          if ('giftList' in ret.data) {
+            let item = ret.data.giftList[0];
+            supGiftData = {
+              n: item.name,
+              pic: item.basicInfo.focusPic,
+              pc: item.priceInfo.price,
+            };
+            resolve(supGiftData);
+          } else {
+            resolve('404');
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+          resolve('500');
+        });
+    });
+  };
+
   const getSuperFansData = () => {
     return new Promise((resolve) => {
       fetch(
@@ -77,5 +106,10 @@ export function useFetch() {
     });
   };
 
-  return { getRoomGiftData, getBpGiftData, getSuperFansData };
+  return {
+    getRoomGiftData,
+    getBpGiftData,
+    getSingleSupplementGiftData,
+    getSuperFansData,
+  };
 }

@@ -6,7 +6,7 @@ import { nobleData } from '@/global/utils/dydata/nobleData.js';
 
 const fs = window.fs;
 
-export function useWebsocket(options, allGiftData) {
+export function useWebsocket(options, allGiftData, missingGiftFetch) {
   let ws = null;
   let stt = new STT();
   let danmakuList = ref([]);
@@ -583,7 +583,7 @@ export function useWebsocket(options, allGiftData) {
     }
     lastHandledGfId = data.gfid;
     //获取数据以及处理
-    let supData = await getSingleSupplementGiftData(data.gfid);
+    let supData = await missingGiftFetch(data.gfid);
     if (supData !== '404' && supData !== '500') {
       allGiftData.value[data.gfid] = supData;
       handleNormalGifts(data);
@@ -641,34 +641,34 @@ export function useWebsocket(options, allGiftData) {
     return true;
   };
 
-  const getSingleSupplementGiftData = (gfid) => {
-    return new Promise((resolve) => {
-      fetch('https://gift.douyucdn.cn/api/gift/v2/web/single?gid=' + gfid, {
-        method: 'GET',
-      })
-        .then((res) => {
-          return res.json();
-        })
-        .then((ret) => {
-          let supGiftData = {};
-          if ('giftList' in ret.data) {
-            let item = ret.data.giftList[0];
-            supGiftData = {
-              n: item.name,
-              pic: item.basicInfo.focusPic,
-              pc: item.priceInfo.price,
-            };
-            resolve(supGiftData);
-          } else {
-            resolve('404');
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-          resolve('500');
-        });
-    });
-  };
+  // const getSingleSupplementGiftData = (gfid) => {
+  //   return new Promise((resolve) => {
+  //     fetch('https://gift.douyucdn.cn/api/gift/v2/web/single?gid=' + gfid, {
+  //       method: 'GET',
+  //     })
+  //       .then((res) => {
+  //         return res.json();
+  //       })
+  //       .then((ret) => {
+  //         let supGiftData = {};
+  //         if ('giftList' in ret.data) {
+  //           let item = ret.data.giftList[0];
+  //           supGiftData = {
+  //             n: item.name,
+  //             pic: item.basicInfo.focusPic,
+  //             pc: item.priceInfo.price,
+  //           };
+  //           resolve(supGiftData);
+  //         } else {
+  //           resolve('404');
+  //         }
+  //       })
+  //       .catch((err) => {
+  //         console.log(err);
+  //         resolve('500');
+  //       });
+  //   });
+  // };
 
   const handleNormalGifts = (data) => {
     if (!checkGiftValid(data, Number(options.value.gift.ban.price))) {

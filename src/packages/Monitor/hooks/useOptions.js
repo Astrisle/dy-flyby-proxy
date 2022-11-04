@@ -10,6 +10,7 @@ import { defaultOptions } from '../options';
 
 export function useOptions() {
   let options = ref(deepCopy(defaultOptions));
+
   const LOCAL_NAME = 'monitor_options';
   let localData = JSON.parse(getLocalData(LOCAL_NAME));
   if (Object.prototype.toString.call(localData) !== '[object Object]') {
@@ -17,6 +18,7 @@ export function useOptions() {
   }
   options.value = localData;
   options.value = formatObj(options.value, defaultOptions);
+
   watch(
     options,
     (n) => {

@@ -367,6 +367,7 @@ import {
 import { useNormalStyle } from '../hooks/useNormalStyle.js';
 import { useWebsocket } from '../hooks/useWebsocket.js';
 import { useOptions } from '../hooks/useOptions';
+import { useFetch } from '../hooks/useFetch';
 
 // import {
 //   saveLocalData,
@@ -379,10 +380,9 @@ import { useOptions } from '../hooks/useOptions';
 // const LOCAL_NAME = 'monitor_options';
 const ipc = window.ipcRenderer;
 const fs = window.fs;
+
 const rid = 520;
 
-//let options = ref(deepCopy(defaultOptions));
-let options = useOptions();
 let allGiftData = ref({});
 let isShowOption = ref(false);
 let isShowDialog = ref(false);
@@ -392,14 +392,23 @@ let dialogArrTmp = ref([]);
 let dialogIndex = ref(0);
 let strToAdd = ref('');
 let activeTab = ref('general');
-let { fontSizeStyle, avatarImgSizeStyle, bgColorValue } =
-  useNormalStyle(options);
-let { connectWs, danmakuList, danmakuListVIP, giftList, giftListUnfiltered } =
-  useWebsocket(options, allGiftData);
 
 let heightDiff = ref(0);
 let heightUpper = ref(0);
 let heightLower = ref(0);
+
+//let options = ref(deepCopy(defaultOptions));
+let options = useOptions();
+let {
+  getRoomGiftData,
+  getBpGiftData,
+  getSingleSupplementGiftData,
+  getSuperFansData,
+} = useFetch(ipc, rid);
+let { connectWs, danmakuList, danmakuListVIP, giftList, giftListUnfiltered } =
+  useWebsocket(options, allGiftData, getSingleSupplementGiftData);
+let { fontSizeStyle, avatarImgSizeStyle, bgColorValue } =
+  useNormalStyle(options);
 
 onMounted(async () => {
   // let localData = JSON.parse(getLocalData(LOCAL_NAME));
@@ -493,7 +502,7 @@ onMounted(async () => {
   await logInit(dirLog, dateStr, '特殊事件');
 
   let data = await getRoomGiftData(rid);
-  let giftData = await getGiftData();
+  let giftData = await getBpGiftData();
   let roomGiftData = { prefix: 'https://gfs-op.douyucdn.cn/dygift' };
   if ('giftList' in data.data) {
     for (let i = 0; i < data.data.giftList.length; i++) {
@@ -885,82 +894,82 @@ function addToBan(nn) {
   }
 }
 
-function getRoomGiftData() {
-  return new Promise((resolve) => {
-    fetch('https://gift.douyucdn.cn/api/gift/v3/web/list?rid=' + rid, {
-      method: 'GET',
-    })
-      .then((res) => {
-        return res.json();
-      })
-      .then((ret) => {
-        resolve(ret);
-      })
-      .catch((err) => {
-        ipc.invoke('err-quit', err.message);
-      });
-  });
-}
+// function getRoomGiftData() {
+//   return new Promise((resolve) => {
+//     fetch('https://gift.douyucdn.cn/api/gift/v3/web/list?rid=' + rid, {
+//       method: 'GET',
+//     })
+//       .then((res) => {
+//         return res.json();
+//       })
+//       .then((ret) => {
+//         resolve(ret);
+//       })
+//       .catch((err) => {
+//         ipc.invoke('err-quit', err.message);
+//       });
+//   });
+// }
 
-function getGiftData() {
-  return new Promise((resolve) => {
-    fetch(
-      'https://webconf.douyucdn.cn/resource/common/prop_gift_list/prop_gift_config.json',
-      {
-        method: 'GET',
-        credentials: 'include',
-      },
-    )
-      .then((res) => {
-        return res.text();
-      })
-      .then((ret) => {
-        let json = ret.substring(
-          String('DYConfigCallback(').length,
-          ret.length,
-        );
-        json = json.substring(0, json.lastIndexOf(')'));
-        json = JSON.parse(json);
-        let obj = {};
-        for (const key in json.data) {
-          let item = json.data[key];
-          obj[key] = {
-            n: item.name,
-            pic: item.himg.replace('https://gfs-op.douyucdn.cn/dygift', ''),
-            pc: item.pc,
-          };
-        }
-        return obj;
-      })
-      .then((ret) => {
-        resolve(ret);
-      })
-      .catch((err) => {
-        ipc.invoke('err-quit', err.message);
-      });
-  });
-}
+// function getGiftData() {
+//   return new Promise((resolve) => {
+//     fetch(
+//       'https://webconf.douyucdn.cn/resource/common/prop_gift_list/prop_gift_config.json',
+//       {
+//         method: 'GET',
+//         credentials: 'include',
+//       },
+//     )
+//       .then((res) => {
+//         return res.text();
+//       })
+//       .then((ret) => {
+//         let json = ret.substring(
+//           String('DYConfigCallback(').length,
+//           ret.length,
+//         );
+//         json = json.substring(0, json.lastIndexOf(')'));
+//         json = JSON.parse(json);
+//         let obj = {};
+//         for (const key in json.data) {
+//           let item = json.data[key];
+//           obj[key] = {
+//             n: item.name,
+//             pic: item.himg.replace('https://gfs-op.douyucdn.cn/dygift', ''),
+//             pc: item.pc,
+//           };
+//         }
+//         return obj;
+//       })
+//       .then((ret) => {
+//         resolve(ret);
+//       })
+//       .catch((err) => {
+//         ipc.invoke('err-quit', err.message);
+//       });
+//   });
+// }
 
-function getSuperFansData() {
-  return new Promise((resolve) => {
-    fetch(
-      'https://www.douyu.com/japi/roomtask/superfans/getTaskStatus?rid=' + rid,
-      {
-        method: 'GET',
-      },
-    )
-      .then((res) => {
-        return res.json();
-      })
-      .then((ret) => {
-        resolve(ret);
-      })
-      .catch((err) => {
-        console.log(err);
-        resolve('500');
-      });
-  });
-}
+// function getSuperFansData() {
+//   return new Promise((resolve) => {
+//     fetch(
+//       'https://www.douyu.com/japi/roomtask/superfans/getTaskStatus?rid=' + rid,
+//       {
+//         method: 'GET',
+//       },
+//     )
+//       .then((res) => {
+//         return res.json();
+//       })
+//       .then((ret) => {
+//         resolve(ret);
+//       })
+//       .catch((err) => {
+//         console.log(err);
+//         resolve('500');
+//       });
+//   });
+// }
 
 function onClickMonitor() {
   isShowOption.value = true;
