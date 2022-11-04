@@ -368,6 +368,7 @@ import { useNormalStyle } from '../hooks/useNormalStyle.js';
 import { useWebsocket } from '../hooks/useWebsocket.js';
 import { useOptions } from '../hooks/useOptions';
 import { useFetch } from '../hooks/useFetch';
+import { useNotification } from '../hooks/useNotification';
 
 // import {
 //   saveLocalData,
@@ -410,6 +411,8 @@ let { connectWs, danmakuList, danmakuListVIP, giftList, giftListUnfiltered } =
 let { fontSizeStyle, avatarImgSizeStyle, bgColorValue } =
   useNormalStyle(options);
 
+let displayNotifyMessage = useNotification(isShowDialog, isShowOption);
+
 onMounted(async () => {
   // let localData = JSON.parse(getLocalData(LOCAL_NAME));
   // if (Object.prototype.toString.call(localData) !== '[object Object]') {
@@ -424,53 +427,53 @@ onMounted(async () => {
   heightLower.value = options.value.moduleSize.lower;
   window.addEventListener('resize', setNewHeight);
 
-  //监听fs错误
-  window.addEventListener('fserror', () => {
-    displayNotifyMessage(
-      '文件系统',
-      '日志文件写入失败, 请反馈开发者, 具体错误可至控制台查看',
-      'error',
-    );
-  });
+  // //监听fs错误
+  // window.addEventListener('fserror', () => {
+  //   displayNotifyMessage(
+  //     '文件系统',
+  //     '日志文件写入失败, 请反馈开发者, 具体错误可至控制台查看',
+  //     'error',
+  //   );
+  // });
 
-  window.addEventListener('wserror', () => {
-    displayNotifyMessage(
-      '网络错误 - 需要手动关闭 ➡️',
-      '网络连接中断, 正在尝试重新连接, 如长时间无反应请重启应用',
-      'error',
-      0,
-    );
-  });
+  // window.addEventListener('wserror', () => {
+  //   displayNotifyMessage(
+  //     '网络错误 - 需要手动关闭 ➡️',
+  //     '网络连接中断, 正在尝试重新连接, 如长时间无反应请重启应用',
+  //     'error',
+  //     0,
+  //   );
+  // });
 
-  //监听超管信息
-  window.addEventListener('pg-message', (e) => {
-    displayNotifyMessage(
-      '超管信息 - 需要手动关闭 ➡️',
-      e.detail.nn + ': ' + e.detail.txt,
-      'warning',
-      0,
-    );
-  });
+  // //监听超管信息
+  // window.addEventListener('pg-message', (e) => {
+  //   displayNotifyMessage(
+  //     '超管信息 - 需要手动关闭 ➡️',
+  //     e.detail.nn + ': ' + e.detail.txt,
+  //     'warning',
+  //     0,
+  //   );
+  // });
 
-  //监听处理失败未知礼物信息
-  window.addEventListener('unknown-gift', (e) => {
-    displayNotifyMessage(
-      '未知礼物',
-      '礼物ID: ' + e.detail.id + ' 获取数据失败, 已记录至日志文件',
-    );
-  });
+  // //监听处理失败未知礼物信息
+  // window.addEventListener('unknown-gift', (e) => {
+  //   displayNotifyMessage(
+  //     '未知礼物',
+  //     '礼物ID: ' + e.detail.id + ' 获取数据失败, 已记录至日志文件',
+  //   );
+  // });
 
-  window.addEventListener('host-enter', () => {
-    displayNotifyMessage(
-      '主播进入房间',
-      'Timecode将会被记录到弹幕日志',
-      'info',
-    );
-  });
+  // window.addEventListener('host-enter', () => {
+  //   displayNotifyMessage(
+  //     '主播进入房间',
+  //     'Timecode将会被记录到弹幕日志',
+  //     'info',
+  //   );
+  // });
 
-  window.addEventListener('tc-reset', () => {
-    displayNotifyMessage('计时器重置', 'Timecode计时器已重置', 'info');
-  });
+  // window.addEventListener('tc-reset', () => {
+  //   displayNotifyMessage('计时器重置', 'Timecode计时器已重置', 'info');
+  // });
 
   //创建日志文件夹
   await resetLogPath();
@@ -710,21 +713,21 @@ function parseDialogData(index) {
   }
 }
 
-function displayNotifyMessage(
-  title = '警告',
-  message,
-  type = 'warning',
-  duration = 3000,
-) {
-  if (isShowDialog.value === true) isShowDialog.value = false;
-  if (isShowOption.value === true) isShowOption.value = false;
-  ElNotification({
-    title: title,
-    type: type,
-    message: message,
-    duration: duration,
-  });
-}
+// function displayNotifyMessage(
+//   title = '警告',
+//   message,
+//   type = 'warning',
+//   duration = 3000,
+// ) {
+//   if (isShowDialog.value === true) isShowDialog.value = false;
+//   if (isShowOption.value === true) isShowOption.value = false;
+//   ElNotification({
+//     title: title,
+//     type: type,
+//     message: message,
+//     duration: duration,
+//   });
+// }
 
 function setNewHeight() {
   heightDiff.value = document.documentElement.clientHeight - 590;

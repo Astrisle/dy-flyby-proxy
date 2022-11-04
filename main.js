@@ -31,6 +31,7 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       enableRemoteModule: true,
+      nodeIntegration: true,
     },
   });
   win.loadFile('entry/index.html');
