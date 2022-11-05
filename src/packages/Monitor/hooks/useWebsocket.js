@@ -395,17 +395,6 @@ export function useWebsocket(options, allGiftData, missingGiftFetch, logging) {
     let fileDir = getFileDir(index, true);
     let strToWrite = getMsgStruc(data, index);
     await logging(strToWrite, fileDir);
-    // await fs.promises
-    //   .appendFile(fileDir, strToWrite + '\n')
-    //   .catch(async (err) => {
-    //     if (err.message.includes('ENOENT')) {
-    //       await createFileDir(getFileDir());
-    //       logToLocalFile(data, index);
-    //     } else {
-    //       console.log(err);
-    //       window.dispatchEvent(new Event('fserror'));
-    //     }
-    //   });
   };
 
   //根据日期以及父目录生成路径与文件名
@@ -423,14 +412,6 @@ export function useWebsocket(options, allGiftData, missingGiftFetch, logging) {
       return dir + '\\' + dateStr + '_' + index + '.txt';
     else return dir;
   };
-
-  //创建文件夹(如不存在)
-  // const createFileDir = async (fileDir) => {
-  //   await fs.promises.mkdir(fileDir, { recursive: true }).catch((err) => {
-  //     console.log(err);
-  //     window.dispatchEvent(new Event('fserror'));
-  //   });
-  // };
 
   //生成日志消息本体
   const getMsgStruc = (data, index) => {
@@ -641,35 +622,6 @@ export function useWebsocket(options, allGiftData, missingGiftFetch, logging) {
     }
     return true;
   };
-
-  // const getSingleSupplementGiftData = (gfid) => {
-  //   return new Promise((resolve) => {
-  //     fetch('https://gift.douyucdn.cn/api/gift/v2/web/single?gid=' + gfid, {
-  //       method: 'GET',
-  //     })
-  //       .then((res) => {
-  //         return res.json();
-  //       })
-  //       .then((ret) => {
-  //         let supGiftData = {};
-  //         if ('giftList' in ret.data) {
-  //           let item = ret.data.giftList[0];
-  //           supGiftData = {
-  //             n: item.name,
-  //             pic: item.basicInfo.focusPic,
-  //             pc: item.priceInfo.price,
-  //           };
-  //           resolve(supGiftData);
-  //         } else {
-  //           resolve('404');
-  //         }
-  //       })
-  //       .catch((err) => {
-  //         console.log(err);
-  //         resolve('500');
-  //       });
-  //   });
-  // };
 
   const handleNormalGifts = (data) => {
     if (!checkGiftValid(data, Number(options.value.gift.ban.price))) {

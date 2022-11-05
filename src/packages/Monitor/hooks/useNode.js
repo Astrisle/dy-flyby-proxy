@@ -5,24 +5,18 @@ const ipc = window.ipcRenderer;
 
 export function useNode(options) {
   const updateLogPath = async () => {
-    //构建日志文件夹路径
-    //let parentDir = await ipc.invoke('get-doc-path');
-    //let dirLog = parentDir + '\\520-Logs';
     const dirLog = (await getUserDocumentPath()) + '\\520-Logs';
-    //存储路径
     options.value.log.dir = dirLog;
   };
 
   //记录弹幕信息到本地文件
   const logToLocalFile = async (str, fileDir) => {
-    //let fileDir = getFileDir(index, true);
-    //let strToWrite = getMsgStruc(data, index);
     await fs.promises.appendFile(fileDir, str + '\n').catch(async (err) => {
       if (err.message.includes('ENOENT')) {
         await createFileDir(fileDir);
         logToLocalFile(str, fileDir);
       } else {
-        console.log(err);
+        console.log('logToLocalFile', err);
         window.dispatchEvent(new Event('fserror'));
       }
     });
@@ -44,7 +38,7 @@ export function useNode(options) {
   //创建文件夹(如不存在)
   const createFileDir = async (fileDir) => {
     await fs.promises.mkdir(fileDir, { recursive: true }).catch((err) => {
-      console.log(err);
+      console.log('createFileDir', err);
       window.dispatchEvent(new Event('fserror'));
     });
   };
@@ -68,11 +62,7 @@ export function useNode(options) {
     try {
       await fs.promises.appendFile(fileDir, initLogMsg);
     } catch (err) {
-      console.log(err.message);
-      // displayNotifyMessage(
-      //   '文件系统',
-      //   '日志文件初始化失败, 请反馈开发者, 具体错误可至控制台查看',
-      // );
+      console.log('logInit', err.message);
       window.dispatchEvent('fserror');
     }
   };
@@ -91,7 +81,7 @@ export function useNode(options) {
     try {
       await fs.promises.mkdir(dirLog, { recursive: true });
     } catch (err) {
-      console.log('Log init', err.message);
+      console.log('onMounted md', err.message);
       window.dispatchEvent('fserror');
     }
 

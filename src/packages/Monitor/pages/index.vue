@@ -371,25 +371,12 @@ import { useFetch } from '../hooks/useFetch';
 import { useNotification } from '../hooks/useNotification';
 import { useNode } from '../hooks/useNode';
 
-// import {
-//   saveLocalData,
-//   getLocalData,
-//   deepCopy,
-//   formatObj,
-// } from '@/global/utils';
-// import { defaultOptions } from '../options';
-
-// const LOCAL_NAME = 'monitor_options';
-//const ipc = window.ipcRenderer;
-//const fs = window.fs;
-
 const rid = 520;
 
 let allGiftData = ref({});
 let isShowOption = ref(false);
 let isShowDialog = ref(false);
 let superFansIntervalId = ref(0);
-//let desktopDir = ref('');
 let dialogArrTmp = ref([]);
 let dialogIndex = ref(0);
 let strToAdd = ref('');
@@ -399,7 +386,6 @@ let heightDiff = ref(0);
 let heightUpper = ref(0);
 let heightLower = ref(0);
 
-//let options = ref(deepCopy(defaultOptions));
 let { options, preSaveHook } = useOptions();
 let {
   getRoomGiftData,
@@ -407,7 +393,6 @@ let {
   getSingleSupplementGiftData,
   getSuperFansData,
 } = useFetch(rid);
-
 let {
   getUserDesktopPath,
   updateLogPath,
@@ -415,7 +400,6 @@ let {
   getFileSavePath,
   overwriteFile,
 } = useNode(options);
-
 let { connectWs, danmakuList, danmakuListVIP, giftList, giftListUnfiltered } =
   useWebsocket(
     options,
@@ -425,99 +409,13 @@ let { connectWs, danmakuList, danmakuListVIP, giftList, giftListUnfiltered } =
   );
 let { fontSizeStyle, avatarImgSizeStyle, bgColorValue } =
   useNormalStyle(options);
-
 let { displayNotifyMessage } = useNotification(isShowDialog, isShowOption);
 
 onMounted(async () => {
-  // let localData = JSON.parse(getLocalData(LOCAL_NAME));
-  // if (Object.prototype.toString.call(localData) !== '[object Object]') {
-  //   localData = deepCopy(defaultOptions);
-  // }
-  // options.value = localData;
-
-  // options.value = formatObj(options.value, defaultOptions);
-
   //窗口大小重新定位
   heightUpper.value = options.value.moduleSize.upper;
   heightLower.value = options.value.moduleSize.lower;
   window.addEventListener('resize', setNewHeight);
-
-  // //监听fs错误
-  // window.addEventListener('fserror', () => {
-  //   displayNotifyMessage(
-  //     '文件系统',
-  //     '日志文件写入失败, 请反馈开发者, 具体错误可至控制台查看',
-  //     'error',
-  //   );
-  // });
-
-  // window.addEventListener('wserror', () => {
-  //   displayNotifyMessage(
-  //     '网络错误 - 需要手动关闭 ➡️',
-  //     '网络连接中断, 正在尝试重新连接, 如长时间无反应请重启应用',
-  //     'error',
-  //     0,
-  //   );
-  // });
-
-  // //监听超管信息
-  // window.addEventListener('pg-message', (e) => {
-  //   displayNotifyMessage(
-  //     '超管信息 - 需要手动关闭 ➡️',
-  //     e.detail.nn + ': ' + e.detail.txt,
-  //     'warning',
-  //     0,
-  //   );
-  // });
-
-  // //监听处理失败未知礼物信息
-  // window.addEventListener('unknown-gift', (e) => {
-  //   displayNotifyMessage(
-  //     '未知礼物',
-  //     '礼物ID: ' + e.detail.id + ' 获取数据失败, 已记录至日志文件',
-  //   );
-  // });
-
-  // window.addEventListener('host-enter', () => {
-  //   displayNotifyMessage(
-  //     '主播进入房间',
-  //     'Timecode将会被记录到弹幕日志',
-  //     'info',
-  //   );
-  // });
-
-  // window.addEventListener('tc-reset', () => {
-  //   displayNotifyMessage('计时器重置', 'Timecode计时器已重置', 'info');
-  // });
-
-  //创建日志文件夹
-  //await resetLogPath();
-  // let dirLog = options.value.log.dir;
-  // let date = new Date();
-  // let dateStr =
-  //   String(date.getFullYear()) +
-  //   '-' +
-  //   String(date.getMonth() + 1) +
-  //   '-' +
-  //   String(date.getDate());
-  // dirLog = dirLog + '\\' + dateStr;
-  // try {
-  //   await fs.promises.mkdir(dirLog, { recursive: true });
-  // } catch (err) {
-  //   console.log(err.message);
-  //   displayNotifyMessage(
-  //     '文件系统',
-  //     '无法创建日志文件夹, 请反馈开发者, 具体错误可至控制台查看',
-  //     'error',
-  //   );
-  // }
-
-  //存储桌面路径
-  // desktopDir.value = await ipc.invoke('get-desktop-path');
-
-  // await logInit(dirLog, dateStr, '弹幕');
-  // await logInit(dirLog, dateStr, '礼物');
-  // await logInit(dirLog, dateStr, '特殊事件');
 
   let data = await getRoomGiftData(rid);
   let giftData = await getBpGiftData();
@@ -536,17 +434,8 @@ onMounted(async () => {
   connectWs(rid);
 });
 
-// async function resetLogPath() {
-//   //构建日志文件夹路径
-//   let parentDir = await ipc.invoke('get-doc-path');
-//   let dirLog = parentDir + '\\520-Logs';
-//   //存储路径
-//   options.value.log.dir = dirLog;
-// }
-
 async function checkAndWriteSuperFanStatus() {
   const data = await getSuperFansData();
-  // const path = desktopDir.value + '\\超粉任务数据.txt';
   const path = (await getUserDesktopPath()) + '\\超粉任务数据.txt';
   let taskList = data.data.superfans.tasklist;
   let filtered = taskList.filter(
@@ -569,15 +458,9 @@ async function checkAndWriteSuperFanStatus() {
     }
   });
   try {
-    // await fs.promises.truncate(path).catch((err) => {
-    //   if (err.message.includes('ENOENT')) return;
-    //   else throw err;
-    // });
-    // await fs.promises.appendFile(path, enrtires);
     await overwriteFile(enrtires, path);
   } catch (error) {
-    console.log('超粉任务', err.message);
-    // displayNotifyMessage('文件系统', '临时文件写入失败');
+    console.log('sfdata', err.message);
     window.dispatchEvent('fserror');
   }
 }
@@ -593,6 +476,10 @@ function superFansEntry(task) {
 function showDialog(index) {
   dialogIndex.value = index;
   isShowDialog.value = true;
+}
+
+function onClickMonitor() {
+  isShowOption.value = true;
 }
 
 function handleDeleteEl(index, item) {
@@ -731,22 +618,6 @@ function parseDialogData(index) {
   }
 }
 
-// function displayNotifyMessage(
-//   title = '警告',
-//   message,
-//   type = 'warning',
-//   duration = 3000,
-// ) {
-//   if (isShowDialog.value === true) isShowDialog.value = false;
-//   if (isShowOption.value === true) isShowOption.value = false;
-//   ElNotification({
-//     title: title,
-//     type: type,
-//     message: message,
-//     duration: duration,
-//   });
-// }
-
 function setNewHeight() {
   heightDiff.value = document.documentElement.clientHeight - 590;
   heightUpper.value = 260 + heightDiff.value / 2;
@@ -755,44 +626,11 @@ function setNewHeight() {
   options.value.moduleSize.lower = heightLower.value;
 }
 
-// async function logInit(dir, date, name) {
-//   let fileDir = dir + '\\' + date + '_' + name + '.txt';
-//   let timeStr = new Date().toLocaleTimeString(['en-GB'], {
-//     hour: '2-digit',
-//     minute: '2-digit',
-//     second: '2-digit',
-//   });
-//   let initLogMsg =
-//     '==================================================\n' +
-//     '[Renderer] Application launched, start logging...\n' +
-//     'Current time: ' +
-//     date +
-//     ' ' +
-//     timeStr +
-//     '\n' +
-//     '==================================================\n';
-//   try {
-//     await fs.promises.appendFile(fileDir, initLogMsg);
-//   } catch (err) {
-//     console.log(err.message);
-//     displayNotifyMessage(
-//       '文件系统',
-//       '日志文件初始化失败, 请反馈开发者, 具体错误可至控制台查看',
-//     );
-//   }
-// }
-
 async function saveOptionsWithDialog() {
-  //const winPath = await ipc.invoke('get-settings-save-path');
   const winPath = await getFileSavePath();
   if (winPath.canceled) return;
   let optionsStr = JSON.stringify(options.value, null, 2);
   try {
-    // await fs.promises.truncate(winPath.filePath).catch((err) => {
-    //   if (err.message.includes('ENOENT')) return;
-    //   else throw err;
-    // });
-    // await fs.promises.appendFile(winPath.filePath, optionsStr);
     await overwriteFile(optionsStr, winPath.filePath);
     displayNotifyMessage('导出设置成功', '设置文件已存储到指定路径', 'success');
   } catch (err) {
@@ -805,10 +643,6 @@ async function readOptionsFromUpload(res) {
   try {
     let resObj = JSON.parse(resStr);
     preSaveHook(resObj);
-    // resObj = formatObj(resObj, options.value);
-    // if (JSON.stringify(resObj) === JSON.stringify(options.value))
-    //   throw new Error('导入文件结构不正确或无设置项更改');
-    // options.value = resObj;
     await updateLogPath();
     displayNotifyMessage('导入设置成功', '设置已生效', 'success');
   } catch (err) {
@@ -917,95 +751,6 @@ function addToBan(nn) {
         .catch(() => {});
   }
 }
-
-// function getRoomGiftData() {
-//   return new Promise((resolve) => {
-//     fetch('https://gift.douyucdn.cn/api/gift/v3/web/list?rid=' + rid, {
-//       method: 'GET',
-//     })
-//       .then((res) => {
-//         return res.json();
-//       })
-//       .then((ret) => {
-//         resolve(ret);
-//       })
-//       .catch((err) => {
-//         ipc.invoke('err-quit', err.message);
-//       });
-//   });
-// }
-
-// function getGiftData() {
-//   return new Promise((resolve) => {
-//     fetch(
-//       'https://webconf.douyucdn.cn/resource/common/prop_gift_list/prop_gift_config.json',
-//       {
-//         method: 'GET',
-//         credentials: 'include',
-//       },
-//     )
-//       .then((res) => {
-//         return res.text();
-//       })
-//       .then((ret) => {
-//         let json = ret.substring(
-//           String('DYConfigCallback(').length,
-//           ret.length,
-//         );
-//         json = json.substring(0, json.lastIndexOf(')'));
-//         json = JSON.parse(json);
-//         let obj = {};
-//         for (const key in json.data) {
-//           let item = json.data[key];
-//           obj[key] = {
-//             n: item.name,
-//             pic: item.himg.replace('https://gfs-op.douyucdn.cn/dygift', ''),
-//             pc: item.pc,
-//           };
-//         }
-//         return obj;
-//       })
-//       .then((ret) => {
-//         resolve(ret);
-//       })
-//       .catch((err) => {
-//         ipc.invoke('err-quit', err.message);
-//       });
-//   });
-// }
-
-// function getSuperFansData() {
-//   return new Promise((resolve) => {
-//     fetch(
-//       'https://www.douyu.com/japi/roomtask/superfans/getTaskStatus?rid=' + rid,
-//       {
-//         method: 'GET',
-//       },
-//     )
-//       .then((res) => {
-//         return res.json();
-//       })
-//       .then((ret) => {
-//         resolve(ret);
-//       })
-//       .catch((err) => {
-//         console.log(err);
-//         resolve('500');
-//       });
-//   });
-// }
-
-function onClickMonitor() {
-  isShowOption.value = true;
-}
-
-// watch(
-//   options,
-//   (n) => {
-//     saveLocalData(LOCAL_NAME, JSON.stringify(n));
-//   },
-//   { deep: true },
-// );
 
 watch(
   () => options.value.taskTracking.enabled,
