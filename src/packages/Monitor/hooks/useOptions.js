@@ -19,6 +19,13 @@ export function useOptions() {
   options.value = localData;
   options.value = formatObj(options.value, defaultOptions);
 
+  const preSaveHook = (data) => {
+    data = formatObj(data, options.value);
+    if (JSON.stringify(data) === JSON.stringify(options.value))
+      throw new Error('导入文件结构不正确或无设置项更改');
+    options.value = data;
+  };
+
   watch(
     options,
     (n) => {
@@ -27,5 +34,5 @@ export function useOptions() {
     { deep: true },
   );
 
-  return options;
+  return { options, preSaveHook };
 }

@@ -23,7 +23,7 @@ export function useNotification(isShowDialog, isShowOption) {
     window.addEventListener('fserror', () => {
       displayNotifyMessage(
         '文件系统',
-        '日志文件写入失败, 请反馈开发者, 具体错误可至控制台查看',
+        '文件写入失败, 请反馈开发者, 具体错误可至控制台查看',
         'error',
       );
     });

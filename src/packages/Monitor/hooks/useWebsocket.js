@@ -6,7 +6,7 @@ import { nobleData } from '@/global/utils/dydata/nobleData.js';
 
 const fs = window.fs;
 
-export function useWebsocket(options, allGiftData, missingGiftFetch) {
+export function useWebsocket(options, allGiftData, missingGiftFetch, logging) {
   let ws = null;
   let stt = new STT();
   let danmakuList = ref([]);
@@ -394,17 +394,18 @@ export function useWebsocket(options, allGiftData, missingGiftFetch) {
   const logToLocalFile = async (data, index) => {
     let fileDir = getFileDir(index, true);
     let strToWrite = getMsgStruc(data, index);
-    await fs.promises
-      .appendFile(fileDir, strToWrite + '\n')
-      .catch(async (err) => {
-        if (err.message.includes('ENOENT')) {
-          await createFileDir(getFileDir());
-          logToLocalFile(data, index);
-        } else {
-          console.log(err);
-          window.dispatchEvent(new Event('fserror'));
-        }
-      });
+    await logging(strToWrite, fileDir);
+    // await fs.promises
+    //   .appendFile(fileDir, strToWrite + '\n')
+    //   .catch(async (err) => {
+    //     if (err.message.includes('ENOENT')) {
+    //       await createFileDir(getFileDir());
+    //       logToLocalFile(data, index);
+    //     } else {
+    //       console.log(err);
+    //       window.dispatchEvent(new Event('fserror'));
+    //     }
+    //   });
   };
 
   //根据日期以及父目录生成路径与文件名
@@ -424,12 +425,12 @@ export function useWebsocket(options, allGiftData, missingGiftFetch) {
   };
 
   //创建文件夹(如不存在)
-  const createFileDir = async (fileDir) => {
-    await fs.promises.mkdir(fileDir, { recursive: true }).catch((err) => {
-      console.log(err);
-      window.dispatchEvent(new Event('fserror'));
-    });
-  };
+  // const createFileDir = async (fileDir) => {
+  //   await fs.promises.mkdir(fileDir, { recursive: true }).catch((err) => {
+  //     console.log(err);
+  //     window.dispatchEvent(new Event('fserror'));
+  //   });
+  // };
 
   //生成日志消息本体
   const getMsgStruc = (data, index) => {

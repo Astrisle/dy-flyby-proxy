@@ -369,6 +369,7 @@ import { useWebsocket } from '../hooks/useWebsocket.js';
 import { useOptions } from '../hooks/useOptions';
 import { useFetch } from '../hooks/useFetch';
 import { useNotification } from '../hooks/useNotification';
+import { useNode } from '../hooks/useNode';
 
 // import {
 //   saveLocalData,
@@ -379,8 +380,8 @@ import { useNotification } from '../hooks/useNotification';
 // import { defaultOptions } from '../options';
 
 // const LOCAL_NAME = 'monitor_options';
-const ipc = window.ipcRenderer;
-const fs = window.fs;
+//const ipc = window.ipcRenderer;
+//const fs = window.fs;
 
 const rid = 520;
 
@@ -388,7 +389,7 @@ let allGiftData = ref({});
 let isShowOption = ref(false);
 let isShowDialog = ref(false);
 let superFansIntervalId = ref(0);
-let desktopDir = ref('');
+//let desktopDir = ref('');
 let dialogArrTmp = ref([]);
 let dialogIndex = ref(0);
 let strToAdd = ref('');
@@ -399,19 +400,33 @@ let heightUpper = ref(0);
 let heightLower = ref(0);
 
 //let options = ref(deepCopy(defaultOptions));
-let options = useOptions();
+let { options, preSaveHook } = useOptions();
 let {
   getRoomGiftData,
   getBpGiftData,
   getSingleSupplementGiftData,
   getSuperFansData,
-} = useFetch(ipc, rid);
+} = useFetch(rid);
+
+let {
+  getUserDesktopPath,
+  updateLogPath,
+  logToLocalFile,
+  getFileSavePath,
+  overwriteFile,
+} = useNode(options);
+
 let { connectWs, danmakuList, danmakuListVIP, giftList, giftListUnfiltered } =
-  useWebsocket(options, allGiftData, getSingleSupplementGiftData);
+  useWebsocket(
+    options,
+    allGiftData,
+    getSingleSupplementGiftData,
+    logToLocalFile,
+  );
 let { fontSizeStyle, avatarImgSizeStyle, bgColorValue } =
   useNormalStyle(options);
 
-let displayNotifyMessage = useNotification(isShowDialog, isShowOption);
+let { displayNotifyMessage } = useNotification(isShowDialog, isShowOption);
 
 onMounted(async () => {
   // let localData = JSON.parse(getLocalData(LOCAL_NAME));
@@ -476,33 +491,33 @@ onMounted(async () => {
   // });
 
   //创建日志文件夹
-  await resetLogPath();
-  let dirLog = options.value.log.dir;
-  let date = new Date();
-  let dateStr =
-    String(date.getFullYear()) +
-    '-' +
-    String(date.getMonth() + 1) +
-    '-' +
-    String(date.getDate());
-  dirLog = dirLog + '\\' + dateStr;
-  try {
-    await fs.promises.mkdir(dirLog, { recursive: true });
-  } catch (err) {
-    console.log(err.message);
-    displayNotifyMessage(
-      '文件系统',
-      '无法创建日志文件夹, 请反馈开发者, 具体错误可至控制台查看',
-      'error',
-    );
-  }
+  //await resetLogPath();
+  // let dirLog = options.value.log.dir;
+  // let date = new Date();
+  // let dateStr =
+  //   String(date.getFullYear()) +
+  //   '-' +
+  //   String(date.getMonth() + 1) +
+  //   '-' +
+  //   String(date.getDate());
+  // dirLog = dirLog + '\\' + dateStr;
+  // try {
+  //   await fs.promises.mkdir(dirLog, { recursive: true });
+  // } catch (err) {
+  //   console.log(err.message);
+  //   displayNotifyMessage(
+  //     '文件系统',
+  //     '无法创建日志文件夹, 请反馈开发者, 具体错误可至控制台查看',
+  //     'error',
+  //   );
+  // }
 
   //存储桌面路径
-  desktopDir.value = await ipc.invoke('get-desktop-path');
+  // desktopDir.value = await ipc.invoke('get-desktop-path');
 
-  await logInit(dirLog, dateStr, '弹幕');
-  await logInit(dirLog, dateStr, '礼物');
-  await logInit(dirLog, dateStr, '特殊事件');
+  // await logInit(dirLog, dateStr, '弹幕');
+  // await logInit(dirLog, dateStr, '礼物');
+  // await logInit(dirLog, dateStr, '特殊事件');
 
   let data = await getRoomGiftData(rid);
   let giftData = await getBpGiftData();
@@ -521,17 +536,18 @@ onMounted(async () => {
   connectWs(rid);
 });
 
-async function resetLogPath() {
-  //构建日志文件夹路径
-  let parentDir = await ipc.invoke('get-doc-path');
-  let dirLog = parentDir + '\\520-Logs';
-  //存储路径
-  options.value.log.dir = dirLog;
-}
+// async function resetLogPath() {
+//   //构建日志文件夹路径
+//   let parentDir = await ipc.invoke('get-doc-path');
+//   let dirLog = parentDir + '\\520-Logs';
+//   //存储路径
+//   options.value.log.dir = dirLog;
+// }
 
 async function checkAndWriteSuperFanStatus() {
   const data = await getSuperFansData();
-  const path = desktopDir.value + '\\超粉任务数据.txt';
+  // const path = desktopDir.value + '\\超粉任务数据.txt';
+  const path = (await getUserDesktopPath()) + '\\超粉任务数据.txt';
   let taskList = data.data.superfans.tasklist;
   let filtered = taskList.filter(
     (task) =>
@@ -553,14 +569,16 @@ async function checkAndWriteSuperFanStatus() {
     }
   });
   try {
-    await fs.promises.truncate(path).catch((err) => {
-      if (err.message.includes('ENOENT')) return;
-      else throw err;
-    });
-    await fs.promises.appendFile(path, enrtires);
+    // await fs.promises.truncate(path).catch((err) => {
+    //   if (err.message.includes('ENOENT')) return;
+    //   else throw err;
+    // });
+    // await fs.promises.appendFile(path, enrtires);
+    await overwriteFile(enrtires, path);
   } catch (error) {
-    console.log(err.message);
-    displayNotifyMessage('文件系统', '临时文件写入失败');
+    console.log('超粉任务', err.message);
+    // displayNotifyMessage('文件系统', '临时文件写入失败');
+    window.dispatchEvent('fserror');
   }
 }
 
@@ -737,43 +755,45 @@ function setNewHeight() {
   options.value.moduleSize.lower = heightLower.value;
 }
 
-async function logInit(dir, date, name) {
-  let fileDir = dir + '\\' + date + '_' + name + '.txt';
-  let timeStr = new Date().toLocaleTimeString(['en-GB'], {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-  let initLogMsg =
-    '==================================================\n' +
-    '[Renderer] Application launched, start logging...\n' +
-    'Current time: ' +
-    date +
-    ' ' +
-    timeStr +
-    '\n' +
-    '==================================================\n';
-  try {
-    await fs.promises.appendFile(fileDir, initLogMsg);
-  } catch (err) {
-    console.log(err.message);
-    displayNotifyMessage(
-      '文件系统',
-      '日志文件初始化失败, 请反馈开发者, 具体错误可至控制台查看',
-    );
-  }
-}
+// async function logInit(dir, date, name) {
+//   let fileDir = dir + '\\' + date + '_' + name + '.txt';
+//   let timeStr = new Date().toLocaleTimeString(['en-GB'], {
+//     hour: '2-digit',
+//     minute: '2-digit',
+//     second: '2-digit',
+//   });
+//   let initLogMsg =
+//     '==================================================\n' +
+//     '[Renderer] Application launched, start logging...\n' +
+//     'Current time: ' +
+//     date +
+//     ' ' +
+//     timeStr +
+//     '\n' +
+//     '==================================================\n';
+//   try {
+//     await fs.promises.appendFile(fileDir, initLogMsg);
+//   } catch (err) {
+//     console.log(err.message);
+//     displayNotifyMessage(
+//       '文件系统',
+//       '日志文件初始化失败, 请反馈开发者, 具体错误可至控制台查看',
+//     );
+//   }
+// }
 
 async function saveOptionsWithDialog() {
-  const winPath = await ipc.invoke('get-settings-save-path');
+  //const winPath = await ipc.invoke('get-settings-save-path');
+  const winPath = await getFileSavePath();
   if (winPath.canceled) return;
   let optionsStr = JSON.stringify(options.value, null, 2);
   try {
-    await fs.promises.truncate(winPath.filePath).catch((err) => {
-      if (err.message.includes('ENOENT')) return;
-      else throw err;
-    });
-    await fs.promises.appendFile(winPath.filePath, optionsStr);
+    // await fs.promises.truncate(winPath.filePath).catch((err) => {
+    //   if (err.message.includes('ENOENT')) return;
+    //   else throw err;
+    // });
+    // await fs.promises.appendFile(winPath.filePath, optionsStr);
+    await overwriteFile(optionsStr, winPath.filePath);
     displayNotifyMessage('导出设置成功', '设置文件已存储到指定路径', 'success');
   } catch (err) {
     displayNotifyMessage('导出设置失败', '错误信息: ' + err.message, 'error');
@@ -784,11 +804,12 @@ async function readOptionsFromUpload(res) {
   let resStr = await res.file.text();
   try {
     let resObj = JSON.parse(resStr);
-    resObj = formatObj(resObj, options.value);
-    if (JSON.stringify(resObj) === JSON.stringify(options.value))
-      throw new Error('导入文件结构不正确或无设置项更改');
-    options.value = resObj;
-    await resetLogPath();
+    preSaveHook(resObj);
+    // resObj = formatObj(resObj, options.value);
+    // if (JSON.stringify(resObj) === JSON.stringify(options.value))
+    //   throw new Error('导入文件结构不正确或无设置项更改');
+    // options.value = resObj;
+    await updateLogPath();
     displayNotifyMessage('导入设置成功', '设置已生效', 'success');
   } catch (err) {
     displayNotifyMessage('导入设置失败', err.message, 'error');
@@ -1033,10 +1054,7 @@ watch(
 );
 </script>
 
-<style
-  lang="scss"
-  scoped
->
+<style lang="scss" scoped>
 @import '@/global/styles/themes/index.scss';
 
 .monitor {

@@ -1,4 +1,5 @@
-export function useFetch(ipc, rid) {
+export function useFetch(rid) {
+  const ipc = window.ipcRenderer;
   const getRoomGiftData = () => {
     return new Promise((resolve) => {
       fetch('https://gift.douyucdn.cn/api/gift/v3/web/list?rid=' + rid, {
