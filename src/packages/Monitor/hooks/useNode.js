@@ -30,10 +30,9 @@ export function useNode(options) {
     await fs.promises.appendFile(path, str);
   };
 
-  const getUserDocumentPath = async () => await ipc.invoke('get-doc-path');
-  const getUserDesktopPath = async () => await ipc.invoke('get-desktop-path');
-  const getFileSavePath = async () =>
-    await ipc.invoke('get-settings-save-path');
+  const getUserDocumentPath = () => ipc.invoke('get-doc-path');
+  const getUserDesktopPath = () => ipc.invoke('get-desktop-path');
+  const getFileSavePath = () => ipc.invoke('get-settings-save-path');
 
   //创建文件夹(如不存在)
   const createFileDir = async (fileDir) => {

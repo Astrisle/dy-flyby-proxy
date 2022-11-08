@@ -443,7 +443,7 @@ async function checkAndWriteSuperFanStatus() {
       (task.taskstatus.status === 0 || task.taskdesc.circleStatus === 2) &&
       !task.taskdesc.name.includes('直播间'),
   );
-  let enrtires = '';
+  let entries = '';
   if (
     options.value.taskTracking.alwaysShowCircle === false &&
     filtered.length > 2
@@ -452,13 +452,13 @@ async function checkAndWriteSuperFanStatus() {
   }
   filtered.forEach((task) => {
     if (options.value.taskTracking.inline === true) {
-      enrtires += superFansEntry(task) + '  ';
+      entries += superFansEntry(task) + '  ';
     } else {
-      enrtires += superFansEntry(task) + '\n';
+      entries += superFansEntry(task) + '\n';
     }
   });
   try {
-    await overwriteFile(enrtires, path);
+    await overwriteFile(entries, path);
   } catch (error) {
     console.log('sfdata', err.message);
     window.dispatchEvent('fserror');
