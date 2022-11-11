@@ -12,7 +12,7 @@ export function useNode(options) {
   //记录弹幕信息到本地文件
   const logToLocalFile = async (str, fileDir) => {
     await fs.promises.appendFile(fileDir, str + '\n').catch(async (err) => {
-      if (err.message.includes('ENOENT')) {
+      if (err.code === 'ENOENT') {
         await createFileDir(fileDir);
         logToLocalFile(str, fileDir);
       } else {
@@ -24,7 +24,7 @@ export function useNode(options) {
 
   const overwriteFile = async (str, path) => {
     await fs.promises.truncate(path).catch((err) => {
-      if (err.message.includes('ENOENT')) return;
+      if (err.err.code === 'ENOENT') return;
       else throw err;
     });
     await fs.promises.appendFile(path, str);

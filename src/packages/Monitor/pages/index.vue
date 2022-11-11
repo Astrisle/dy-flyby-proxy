@@ -324,7 +324,7 @@
           <el-button
             type="text"
             size="small"
-            @click="handleDeleteEl(dialogIndex, scope.row.name)"
+            @click="handleKeyWordDelete(dialogIndex, scope.row.name)"
           >
             移除
           </el-button>
@@ -342,7 +342,7 @@
         class="align-middle"
         type="primary"
         plain
-        @click="handleAddStr(dialogIndex)"
+        @click="handleKeyWordAdd(dialogIndex)"
         >添加</el-button
       >
     </template>
@@ -473,149 +473,84 @@ function superFansEntry(task) {
   return nameRes + ' - ' + task.taskstatus.cur + ' / ' + task.taskstatus.max;
 }
 
+function onClickMonitor() {
+  isShowOption.value = true;
+}
+
 function showDialog(index) {
   dialogIndex.value = index;
   isShowDialog.value = true;
 }
 
-function onClickMonitor() {
-  isShowOption.value = true;
+function dialogGetOptions(index) {
+  return [
+    options.value.danmaku.ban.keywords,
+    options.value.danmaku.ban.nicknames,
+    options.value.danmaku.vip,
+    options.value.gift.ban.keywords,
+  ][index];
 }
 
-function handleDeleteEl(index, item) {
+function dialogUpdateOptions(index, res) {
   switch (index) {
     case 0:
-      options.value.danmaku.ban.keywords = options.value.danmaku.ban.keywords
-        .split(' ')
-        .filter((e) => e !== item)
-        .join(' ');
+      options.value.danmaku.ban.keywords = res;
       break;
     case 1:
-      options.value.danmaku.ban.nicknames = options.value.danmaku.ban.nicknames
-        .split(' ')
-        .filter((e) => e !== item)
-        .join(' ');
+      options.value.danmaku.ban.nicknames = res;
       break;
     case 2:
-      options.value.danmaku.vip = options.value.danmaku.vip
-        .split(' ')
-        .filter((e) => e !== item)
-        .join(' ');
+      options.value.danmaku.vip = res;
       break;
     case 3:
-      options.value.gift.ban.keywords = options.value.gift.ban.keywords
-        .split(' ')
-        .filter((e) => e !== item)
-        .join(' ');
-    default:
-  }
-}
-
-function handleAddStr(index) {
-  switch (index) {
-    case 0:
-      if (options.value.danmaku.ban.keywords === '') {
-        options.value.danmaku.ban.keywords += strToAdd.value;
-      } else {
-        options.value.danmaku.ban.keywords =
-          dialogArrTmp.value
-            .map((obj) => {
-              return obj.name;
-            })
-            .join(' ') +
-          ' ' +
-          strToAdd.value;
-      }
-      strToAdd.value = '';
-      break;
-    case 1:
-      if (options.value.danmaku.ban.nicknames === '') {
-        options.value.danmaku.ban.nicknames += strToAdd.value;
-      } else {
-        options.value.danmaku.ban.nicknames =
-          dialogArrTmp.value
-            .map((obj) => {
-              return obj.name;
-            })
-            .join(' ') +
-          ' ' +
-          strToAdd.value;
-      }
-      strToAdd.value = '';
-      break;
-    case 2:
-      if (options.value.danmaku.vip === '') {
-        options.value.danmaku.ban.vip += strToAdd.value;
-      } else {
-        options.value.danmaku.vip =
-          dialogArrTmp.value
-            .map((obj) => {
-              return obj.name;
-            })
-            .join(' ') +
-          ' ' +
-          strToAdd.value;
-      }
-      strToAdd.value = '';
-      break;
-    case 3:
-      if (options.value.gift.ban.keywords === '') {
-        options.value.gift.ban.keywords += strToAdd.value;
-      } else {
-        options.value.gift.ban.keywords =
-          dialogArrTmp.value
-            .map((obj) => {
-              return obj.name;
-            })
-            .join(' ') +
-          ' ' +
-          strToAdd.value;
-      }
-      strToAdd.value = '';
+      options.value.gift.ban.keywords = res;
       break;
     default:
+      break;
   }
 }
 
 function parseDialogData(index) {
-  switch (index) {
-    case 0:
-      let res0 = options.value.danmaku.ban.keywords.split(' ').map((str) => {
-        return {
-          name: str,
-        };
-      });
-      dialogArrTmp.value = res0;
-      if (res0.length === 1 && res0[0].name === '') return undefined;
-      return res0;
-    case 1:
-      let res1 = options.value.danmaku.ban.nicknames.split(' ').map((str) => {
-        return {
-          name: str,
-        };
-      });
-      dialogArrTmp.value = res1;
-      if (res1.length === 1 && res1[0].name === '') return undefined;
-      return res1;
-    case 2:
-      let res2 = options.value.danmaku.vip.split(' ').map((str) => {
-        return {
-          name: str,
-        };
-      });
-      dialogArrTmp.value = res2;
-      if (res2.length === 1 && res2[0].name === '') return undefined;
-      return res2;
-    case 3:
-      let res3 = options.value.gift.ban.keywords.split(' ').map((str) => {
-        return {
-          name: str,
-        };
-      });
-      dialogArrTmp.value = res3;
-      if (res3.length === 1 && res3[0].name === '') return undefined;
-      return res3;
+  //console.log(str);
+  console.log('parse');
+  let res = dialogGetOptions(index)
+    .split(' ')
+    .map((el) => {
+      return {
+        name: el,
+      };
+    });
+  //console.log(res);
+  dialogArrTmp.value = res;
+  //console.log(_arr);
+  if (res.length === 1 && res[0].name === '') return undefined;
+  return res;
+}
+
+function handleKeyWordDelete(index, item) {
+  let str = dialogGetOptions(index);
+  str = str
+    .split(' ')
+    .filter((e) => e !== item)
+    .join(' ');
+  dialogUpdateOptions(index, str);
+}
+
+function handleKeyWordAdd(index) {
+  if (dialogGetOptions(index) === '') {
+    dialogUpdateOptions(index, strToAdd.value);
+  } else {
+    let res =
+      dialogArrTmp.value
+        .map((obj) => {
+          return obj.name;
+        })
+        .join(' ') +
+      ' ' +
+      strToAdd.value;
+    dialogUpdateOptions(index, res);
   }
+  strToAdd.value = '';
 }
 
 function setNewHeight() {
